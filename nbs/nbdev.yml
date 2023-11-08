@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "pclab"
+  site-url: "https://JohnRomanelis.github.io/pclab"
+  description: "A project designed to investigate various aspects related to point cloud research, like classification, retrieval, completion, etc."
+  repo-branch: main
+  repo-url: "https://github.com/JohnRomanelis/pclab"
