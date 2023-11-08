@@ -1,0 +1,9 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - 00_transforms.ipynb
+      - section: Datasets
+        contents:
+          - Datasets/01_modelnet40.ipynb
+          - Datasets/02_shapenetpart.ipynb
