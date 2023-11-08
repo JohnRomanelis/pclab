@@ -5,5 +5,5 @@ website:
       - 00_transforms.ipynb
       - section: Datasets
         contents:
-          - Datasets/01_modelnet40.ipynb
-          - Datasets/02_shapenetpart.ipynb
+          - 01_datasets.modelnet40.ipynb
+          - 01_datasets.shapenetpart.ipynb
