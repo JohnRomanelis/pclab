@@ -90,7 +90,7 @@ class RandomPointDropout(Transform):
         return pc
 
 # %% ../nbs/01_transforms.ipynb 13
-class ToTensor:
+class ToTensor(Transform):
     "Turns a numpy array to a torch tensor"
     def forward(self, pc):
         pc = torch.from_numpy(pc)
