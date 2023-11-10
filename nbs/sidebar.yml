@@ -2,8 +2,10 @@ website:
   sidebar:
     contents:
       - index.ipynb
-      - 00_transforms.ipynb
+      - 00_utils.ipynb
+      - 01_transforms.ipynb
       - section: Datasets
         contents:
-          - 01_datasets.modelnet40.ipynb
-          - 01_datasets.shapenetpart.ipynb
+          - 02_datasets.modelnet40.ipynb
+          - 02_datasets.shapenetpart.ipynb
+      
