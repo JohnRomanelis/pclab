@@ -124,5 +124,6 @@ d = { 'settings': { 'branch': 'main',
                                                                                          'pclab/transforms.py'),
                                   'pclab.transforms.UnitSphereNormalization.forward': ( 'transforms.html#unitspherenormalization.forward',
                                                                                         'pclab/transforms.py')},
-            'pclab.utils': { 'pclab.utils.pc_to_o3d': ('utils.html#pc_to_o3d', 'pclab/utils.py'),
+            'pclab.utils': { 'pclab.utils.cal_loss': ('utils.html#cal_loss', 'pclab/utils.py'),
+                             'pclab.utils.pc_to_o3d': ('utils.html#pc_to_o3d', 'pclab/utils.py'),
                              'pclab.utils.quick_vis': ('utils.html#quick_vis', 'pclab/utils.py')}}}
