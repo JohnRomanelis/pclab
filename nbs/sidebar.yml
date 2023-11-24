@@ -8,4 +8,7 @@ website:
         contents:
           - 02_datasets.modelnet40.ipynb
           - 02_datasets.shapenetpart.ipynb
+      - section: Models
+        contents:
+          - 03_models.pointnet.ipynb
       

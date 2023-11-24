@@ -6,6 +6,8 @@ __all__ = ['pc_to_o3d', 'quick_vis']
 # %% ../nbs/00_utils.ipynb 2
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import open3d as o3d
 
 # %% ../nbs/00_utils.ipynb 3
