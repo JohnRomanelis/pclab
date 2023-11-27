@@ -6,8 +6,9 @@ website:
       - 01_transforms.ipynb
       - section: Datasets
         contents:
-          - 02_datasets.modelnet40.ipynb
-          - 02_datasets.shapenetpart.ipynb
+          - 02.1_datasets_modelnet40.ipynb
+          - 02.2_datasets_scanobjectnn.ipynb
+          - 02.4_datasets_modelnet40_fewshot.ipynb
       - section: Models
         contents:
           - 03_models.pointnet.ipynb
