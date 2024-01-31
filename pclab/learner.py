@@ -201,7 +201,7 @@ class ProgressCB(Callback):
 
     def _log(self, d):
         if self.first:
-            self.mbar.write(list(d.values()), table=True)
+            self.mbar.write(list(d.keys()), table=True)
             self.first = False
         self.mbar.write(list(d.values()), table=True)
     
