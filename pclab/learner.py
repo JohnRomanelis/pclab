@@ -2,8 +2,8 @@
 
 # %% auto 0
 __all__ = ['to_cpu', 'CancelFitException', 'CancelBatchException', 'CancelEpochException', 'Callback', 'run_cbs', 'with_cbs',
-           'Learner', 'TrainLearner', 'TrainCB', 'LRFinderCB', 'MetricsCB', 'DeviceCB', 'ProgressCB', 'BaseSchedCB',
-           'BatchSchedCB', 'EpochSchedCB', 'lr_find']
+           'Learner', 'TrainLearner', 'TrainCB', 'LRFinderCB', 'MetricsCB', 'Accuracy', 'DeviceCB', 'ProgressCB',
+           'BaseSchedCB', 'BatchSchedCB', 'EpochSchedCB', 'lr_find', 'WandBLogger']
 
 # %% ../nbs/04_learner.ipynb 3
 import torch
@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import ExponentialLR
 
-from torcheval.metrics import Mean
+from torcheval.metrics import Mean, MulticlassAccuracy
 
 import fastcore.all as fc
 from fastprogress import progress_bar,master_bar
@@ -20,6 +20,8 @@ from fastprogress import progress_bar,master_bar
 import matplotlib.pyplot as plt
 
 import math
+import wandb
+
 from copy import copy
 from functools import partial
 from operator import attrgetter
@@ -182,13 +184,27 @@ class MetricsCB(Callback):
         self.loss.update(to_cpu(learn.loss), weight=len(x))
 
 # %% ../nbs/04_learner.ipynb 15
+class Accuracy(MulticlassAccuracy):
+    """
+    This class is a wrapper for torchval.metrics.MulticlassAccuracy.
+    It receives as input the prediction of the model and the target and:
+    - finds the index of the maximum value in the prediction - aka the class
+    - squizes the target to remove the last dimension
+    """
+    def update(self, preds, target):
+        # preds.shape = Bx40
+        # target.shape = Bx1
+        preds = torch.argmax(preds, dim=-1)
+        super().update(preds, target.squeeze())
+
+# %% ../nbs/04_learner.ipynb 16
 class DeviceCB(Callback):
     def __init__(self, device=def_device): fc.store_attr()
     def before_fit(self, learn):
         if hasattr(learn.model, 'to'): learn.model.to(self.device)
     def before_batch(self, learn): learn.batch = to_device(learn.batch, device=self.device)
 
-# %% ../nbs/04_learner.ipynb 16
+# %% ../nbs/04_learner.ipynb 17
 class ProgressCB(Callback):
     order = MetricsCB.order + 1
     def __init__(self, plot=False): self.plot = plot
@@ -218,22 +234,67 @@ class ProgressCB(Callback):
                 self.val_losses.append(learn.metrics.all_metrics['loss'].compute())
                 self.mbar.update_graph([[fc.L.range(self.losses), self.losses],[fc.L.range(learn.epoch+1).map(lambda x: (x+1)*len(learn.dls.train)), self.val_losses]])
 
-# %% ../nbs/04_learner.ipynb 18
+# %% ../nbs/04_learner.ipynb 19
 class BaseSchedCB(Callback):
     def __init__(self, sched): self.sched = sched
     def before_fit(self, learn): self.schedo = self.sched(learn.opt)
     def _step(self, learn):
         if learn.training: self.schedo.step()
 
-# %% ../nbs/04_learner.ipynb 19
+# %% ../nbs/04_learner.ipynb 20
 class BatchSchedCB(BaseSchedCB):
     def after_batch(self, learn): self._step(learn)
 
-# %% ../nbs/04_learner.ipynb 20
+# %% ../nbs/04_learner.ipynb 21
 class EpochSchedCB(BaseSchedCB):
     def after_epoch(self, learn): self._step(learn)
 
-# %% ../nbs/04_learner.ipynb 22
+# %% ../nbs/04_learner.ipynb 23
 @fc.patch
 def lr_find(self:Learner, gamma=1.3, max_mult=3, start_lr=1e-5, max_epochs=10):
     self.fit(max_epochs, lr=start_lr, cbs=LRFinderCB(gamma=gamma, max_mult=max_mult))
+
+# %% ../nbs/04_learner.ipynb 25
+class WandBLogger(MetricsCB):
+
+    def __init__(self, project, name, config, *ms, **metrics):
+        super().__init__(*ms, **metrics)
+        self.project = project
+        self.name = name
+        self.config = config
+
+        self.run = wandb.init(project=self.project, name=self.name, config=self.config)
+    
+    def wandb_log(self, metrics, epoch, train):
+
+        # log the metrics to wandb
+        if train:
+            self.run.log({f'train_{k}':v for k,v in metrics.items()})
+            self.run.log({"epoch": epoch})
+        else:
+            self.run.log({f'eval_{k}':v for k,v in metrics.items()})
+
+
+    def wandb_log_step_loss(self, loss):
+        self.run.log({'loss': loss})
+
+
+    def after_epoch(self, learn):
+        # compute the values of the metrics
+        metrics = {k:v.compute() for k,v in self.all_metrics.items()}
+        
+        # keep metrics with low acc for display purposes
+        log = {k:f'{v:.3f}' for k,v in metrics.items()}
+        log['epoch'] = learn.epoch
+        log['train'] = 'train' if learn.model.training else 'eval'
+        # self._log is ment to be replaced by other callbacks such as the `ProgressCB`
+        self._log(log)
+
+        # log the metrics to wandb
+        self.wandb_log(metrics, learn.epoch, learn.model.training)
+    
+        
+    def after_batch(self, learn):
+        super().after_batch(learn)
+        if learn.model.training:
+            self.wandb_log_step_loss(learn.loss)

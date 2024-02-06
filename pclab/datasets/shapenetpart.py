@@ -10,6 +10,6 @@ import cv2
 import os
 import glob
 import h5py
-
+import pickle
 
 from torch.utils.data import Dataset
