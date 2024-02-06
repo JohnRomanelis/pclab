@@ -298,3 +298,6 @@ class WandBLogger(MetricsCB):
         super().after_batch(learn)
         if learn.model.training:
             self.wandb_log_step_loss(learn.loss)
+            
+    def after_fit(self, learn):
+        self.run.finish()
